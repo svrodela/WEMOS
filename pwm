@@ -1,0 +1,24 @@
+int led = 3;
+/*
+PERMITE LA LECTURA MAPEADA DE UN POTENCIOMETRO
+Y ENCIENDE UN LED MAPEADO POR PWM 0-1023 0-100%
+*/
+//INPUT / OUTPUT
+void setup() {);
+ pinMode(led,OUTPUT); //LED SALIDA PWM
+ pinMode(A1,INPUT); //POT
+ Serial.begin(9600);
+
+ }
+
+void loop() {
+	int valor = analogRead(A1);
+	int porcentaje = map(valor, 0, 1023, 0, 100);
+	Serial.print("Lectura potenciometro: ");
+	Serial.print(valor);
+	Serial.print(" Salida Pwm: ");
+	Serial.print(porcentaje);
+	analogWrite(led, porcentaje);
+	delay(500);
+
+ }
