@@ -1,0 +1,118 @@
+//This example will use a static IP to control the switching of a relay. Over LAN using a web browser. 
+//A lot of this code have been resued from the example on the ESP8266 Learning Webpage below. 
+//http://www.esp8266learning.com/wemos-webserver-example.php
+
+//Libreria para la wemos
+#include <ESP8266WiFi.h>
+
+// Informacion sobre el WIFI 
+
+const char* ssid = "SSID"; //Nombre de la red WIFI, WeMos solo se conectará a redes 2.4GHz.
+const char* password = "password"; //contraseña WIFI 
+
+//se define el pin del servidor
+
+int relayPin = D1; // la placa usa el pin 1 como rele
+WiFiServer server(80);
+
+IPAddress ip(192, 168, 10, 143); // direccion IP
+IPAddress gateway(192, 168, 10, 1); // puerta de enlace
+IPAddress subnet(255, 255, 255, 0); // mascara de subred
+
+
+// void setup inicializamos variales y funciones 
+//el setup solo corre una vez al iniciarce la placa
+
+void setup() {
+  Serial.begin(115200);
+  delay(10);
+ 
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+ 
+  Serial.print(F("EStableciendo dirección IP : "));
+  Serial.println(ip);
+  
+  // Conecta a la Red WIFI
+
+  Serial.println();
+  Serial.println();
+  Serial.print("Conectando a: ");
+  Serial.println(ssid);
+  WiFi.config(ip, gateway, subnet); 
+  WiFi.begin(ssid, password);
+  //tratando de conectar ... imprime puntos
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi conectada");
+ 
+  // Iniciando el servidor
+  server.begin();
+  Serial.println("Servidor Iniciado");
+ 
+  // Imprime la IP
+  Serial.print("Usa esta URL : ");
+  Serial.print("http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("/"); 
+}
+
+//void loop ejecuta de forma repetitiva 
+
+void loop() {
+  // checa si cun cliente esta conectado
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+ 
+  // espera hasta que el cliente envia datos
+  Serial.println("cliente nuevo");
+  while(!client.available()){
+    delay(1);
+  }
+ 
+  // lee la primera linea de la solicitud
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  client.flush();
+ 
+  //coincide con la solicitud, Comprobando para ver cuál es el estado actual
+  int value = LOW;
+  if (request.indexOf("/relay=ON") != -1) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    value = HIGH;
+  } 
+  if (request.indexOf("/relay=OFF") != -1){
+     digitalWrite(LED_BUILTIN, LOW);
+    value = LOW;
+  }
+  // Devuelve una respuesta y crea una pagina html
+  
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println(""); //  espacio
+  client.println("<!DOCTYPE HTML>");
+  client.println("<html>");
+ 
+  client.print("Rele: ");
+ 
+  if(value == HIGH) {
+    client.print("Encendido (ON)");  
+  } else {
+    client.print("Apagado (OFF)");
+  }
+  client.println("<br><br><br>");
+  client.println("<a href=\"/relay=ON\">Clic para prender.</a> <br><br><br>");
+  client.println("<a href=\"/relay=OFF\">Click para apagar.</a><br>");
+  client.println("</html>");
+ 
+  delay(1);
+  Serial.println("Cliente desconectado");
+  Serial.println("");
+ 
+}//FIN
