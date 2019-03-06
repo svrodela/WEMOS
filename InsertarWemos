@@ -49,7 +49,7 @@ void loop()
   Serial.print("connectando a ");
   Serial.println(host);
 
-  // Use WiFiClient class to create TCP connections
+  // crea la conexion con el cliente wifi
   WiFiClient client;
   const int httpPort = 80;
   if (!client.connect(host, httpPort)) {
